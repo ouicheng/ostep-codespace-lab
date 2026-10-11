@@ -1,7 +1,14 @@
 # Chapter7 CPU Scheduling Homework
 ## Q1
 - Prediction / 预测:
+FIFO：Avg Response: 200.00，Avg Turnaround: 400.00
+SJF：Avg Response: 200.00，Avg Turnaround: 400.00
 - Reasoning / 理由:
+3个作业运行长度全部都是200，同时到达。
+FIFO按照到达顺序依次运行，Job0从0‑200，Job1从200‑400，Job2从400‑600。
+SJF选择最短作业，但所有作业长度一样，调度顺序和FIFO完全一样。
+Job0首次运行时刻0；Job1首次运行时刻200；Job2首次运行时刻400。
+平均响应=(0+200+400)/3=200；平均周转=(200+400+600)/3=400。
 - Verified result / 验证结果:
 FIFO: Avg Response: 200.00, Avg Turnaround: 400.00
 SJF: Avg Response: 200.00, Avg Turnaround: 400.00
@@ -10,7 +17,14 @@ SJF: Avg Response: 200.00, Avg Turnaround: 400.00
 
 ## Q2
 - Prediction / 预测:
+FIFO：Avg Response:133.33，Avg Turnaround:333.33
+SJF：Avg Response:133.33，Avg Turnaround:333.33
 - Reasoning / 理由:
+作业长度100、200、300，同时到达，到达顺序正好就是由短到长。
+FIFO按到达顺序：Job0(100) → Job1(200) → Job2(300)。
+SJF每次挑选当前最短作业，同样也是Job0→Job1→Job2。
+Job0响应0，Job1响应100，Job2响应300。平均响应=(0+100+300)/3 =133.33。
+Job0周转100，Job1周转300，Job2周转600。平均周转=(100+300+600)/3=333.33。
 - Verified result / 验证结果:
 FIFO: Avg Response:133.33, Avg Turnaround:333.33
 SJF: Avg Response:133.33, Avg Turnaround:333.33
@@ -19,7 +33,12 @@ SJF: Avg Response:133.33, Avg Turnaround:333.33
 
 ## Q3
 - Prediction / 预测:
+RR（quantum=1）：Avg Response:1.00，Avg Turnaround:465.67
 - Reasoning / 理由:
+RR是抢占式时间片轮转，时间片=1。3个作业同时到达，从时间0开始轮流执行，每个作业先跑1单位就切换。
+Job0第一次运行在0，Job1第一次运行在1，Job2第一次运行在2。
+平均响应=(0+1+2)/3 =1.00。
+但是大量切换会拉长全部作业完成的总时间，因此周转时间会明显变大。
 - Verified result / 验证结果:
 RR(quantum=1): Avg Response: 1.00, Avg Turnaround: 465.67
 - Analysis / 分析:
@@ -27,31 +46,40 @@ RR时间片=1，每个作业轮流执行1个时间单位。响应时间表现非
 
 ## Q4
 - Prediction / 预测:
+当作业到达顺序恰好按照运行时间由短到长到达时，SJF与FIFO得到相同周转时间。
 - Reasoning / 理由:
-- Verified result / 验证结果: N/A（理论分析题，无模拟器输出）
+FIFO严格按照到达顺序执行；SJF每次选当前剩余时间最短作业。
+如果到达顺序就是短作业先到，那么两者调度序列完全一致，每个作业完成时刻一样，周转时间相等。
+如果长作业先到达，FIFO会出现车队效应，SJF就会比FIFO周转时间更好。
 - Analysis / 分析:
 当**作业到达顺序与作业运行时长从小到大的顺序完全一致**时，SJF和FIFO会执行完全相同的序列，周转时间相等。
 例如作业按短→中→长依次到达。此时FIFO先来先执行，SJF每次也选当前最短，调度序列一致。如果长作业最先到达，则两者行为就会出现巨大差距，FIFO会出现车队效应。
 
 ## Q5
 - Prediction / 预测:
+全部作业同时到达，并且RR的时间片quantum ≥ 最长作业的CPU运行时间。此时RR退化为类似FIFO非抢占模式，如果到达顺序恰好是由短到长，RR响应时间就和SJF相同。
 - Reasoning / 理由:
-- Verified result / 验证结果: N/A（理论分析题，无模拟器输出）
+时间片足够大，每个作业拿到时间片就直接运行到结束，不会发生抢占切换。RR不再轮转，执行顺序等价到达顺序。
+当到达顺序就是短作业优先，执行序列和SJF完全一样，每个作业第一次被调度的时刻完全一致，响应时间相等。
 - Analysis / 分析:
-所有作业**同时到达，且时间片quantum大于等于最长作业的运行时间**。
+所有作业**同时到达，且RR的时间片quantum大于等于最长作业的运行时间**。
 此时RR每个作业拿到完整时间片就直接运行到结束，行为退化为非抢占，执行顺序等价于FIFO；如果同时作业恰好是短作业排在前面，则RR行为就等价SJF，响应时间就会和SJF完全一样。简单理解：时间片足够大，RR就不再切换，变成批处理调度。
 
 ## Q6
 - Prediction / 预测:
+SJF（非抢占）下，若最先运行的作业长度不断增加，平均响应时间会随之增大。
 - Reasoning / 理由:
-- Verified result / 验证结果: N/A（理论分析题，无模拟器输出）
+SJF非抢占，作业一旦开始就运行到底。如果第一个作业运行时间很长，后面所有作业都必须等待该作业全部结束才可以第一次运行。作业越长，后面作业首次调度时间越晚，整体平均响应时间上升，也就是车队效应。
 - Analysis / 分析:
 SJF是非抢占式调度。第一个作业一旦开始运行就会运行至结束。如果第一个作业长度不断增大，后面所有作业第一次被调度的时刻就会被不断推迟，**平均响应时间会随之变大**。长作业先到会造成后面所有作业等待，也就是车队效应。
 
 ## Q7
 - Prediction / 预测:
+RR调度，时间片quantum变大，平均响应时间会变差（数值变大）。N个作业最坏情况响应时间公式：T_response_worst = (N‑1) * quantum。
 - Reasoning / 理由:
-- Verified result / 验证结果: N/A（理论分析题，无模拟器输出）
+RR每个作业轮流跑一个时间片。时间片越大，一个作业占用CPU的时间就越长，其余作业要等待更久才可以获得第一次运行机会，响应时间升高。
+最坏情况：新作业恰好在其他N‑1个作业刚被调度之后到来，它必须等剩下N‑1个作业全部各跑完一整个时间片，自己才能够得到第一次运行，所以最坏响应为(N‑1)*quantum。
+时间片变小可以改善响应时间，但会增加上下文切换次数，恶化周转时间。
 - Analysis / 分析:
 RR：时间片quantum越大，响应时间会变差。时间片越大，作业要等待更久才能轮到自己第一次运行。
 N个作业RR最坏情况响应时间公式：`T_response_worst = (N‑1) * quantum`。
