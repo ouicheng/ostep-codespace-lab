@@ -10,7 +10,8 @@ Stats: Total Time 10
 Stats: CPU Busy 10 (100.00%)
 Stats: IO Busy  0 (0.00%)
 
-- Analysis / 分析:
+Analysis / 分析:
+预测结果与模拟器输出完全匹配。两个纯CPU密集进程没有I/O事件，不会触发进程切换，CPU全程100%被占用。整个过程没有I/O操作，因此IO Busy为0。
 ## Q2
 - Prediction / 预测:
 Total Time: 11 ticks，CPU Busy: 6，CPU Utilization: 54.55%
@@ -20,7 +21,9 @@ Verified result / 验证结果:
 Stats: Total Time 11
 Stats: CPU Busy 6 (54.55%)
 Stats: IO Busy  5 (45.45%)
+## Q2
 - Analysis / 分析:
+预测与模拟器结果一致。PID0执行完毕之后才开始运行PID1。PID1进入I/O阻塞时没有其他就绪进程，CPU处于空闲状态，CPU资源没有得到利用。IO Busy等于I/O设备阻塞的5个tick。
 ## Q3
 - Prediction / 预测:
 Total Time: 7 ticks，CPU Busy: 6，CPU Utilization: 85.71%
@@ -30,7 +33,9 @@ Verified result / 验证结果:
 Stats: Total Time 7
 Stats: CPU Busy 6 (85.71%)
 Stats: IO Busy  5 (71.43%)
+## Q3
 - Analysis / 分析:
+预测正确。`SWITCH_ON_IO`在发起I/O的时候执行进程切换，CPU可以利用I/O等待时间运行PID1的CPU任务，实现CPU计算与I/O并行，缩短整体总时间，提升CPU利用率。
 ## Q4
 - Prediction / 预测:
 Total Time: 11 ticks，CPU Busy: 6，CPU Utilization: 54.55%
@@ -41,6 +46,7 @@ Stats: Total Time 11
 Stats: CPU Busy 6 (54.55%)
 Stats: IO Busy  5 (45.45%)
 - Analysis / 分析:
+预测和模拟器结果一致。`SWITCH_ON_END`策略不会在发起I/O时切换进程；即使PID1处于就绪状态，CPU也要空闲等待PID0完整I/O全部结束。和Q3对比，相同进程，调度策略不同，性能差距明显。
 ## Q5
 - Prediction / 预测:
 Total Time: 7 ticks，CPU Busy: 6，CPU Utilization: 85.71%
@@ -51,6 +57,7 @@ Stats: Total Time 7
 Stats: CPU Busy 6 (85.71%)
 Stats: IO Busy  5 (71.43%)
 - Analysis / 分析:
+预测正确。`SWITCH_ON_IO`允许在I/O发起时切换进程，充分利用I/O等待时间跑其他CPU任务，实现I/O‑CPU并行。对比Q4，总时间从11降低到7，CPU利用率大幅提升，体现I/O时切换的优势。
 ## Q6
 - Prediction / 预测:
 Total Time: 35 ticks，CPU Busy: 21，CPU Utilization: 60.00%
@@ -63,7 +70,9 @@ Verified result / 验证结果:
 Stats: Total Time 31
 Stats: CPU Busy 21 (67.74%)
 Stats: IO Busy  15 (48.39%)
+## Q6
 - Analysis / 分析:
+手动预测总时间35 tick，模拟器实际输出31 tick，我的预测偏长。原因是高估了PID0在就绪队列的排队延迟；模拟器中多次I/O可以充分并行，PID0等待CPU的时间比预想更短。CPU Busy=21和预期保持一致，调度策略不会改变总的CPU工作量，只会改变整体完成时间。`IO_RUN_LATER`下I/O完成PID0加入就绪队列末尾，不会抢占CPU。
 ## Q7
 - Prediction / 预测:
 Total Time: 31 ticks，CPU Busy: 21，CPU Utilization: 67.74%
@@ -74,7 +83,9 @@ Verified result / 验证结果:
 Stats: Total Time 21
 Stats: CPU Busy 21 (100.00%)
 Stats: IO Busy  15 (71.43%)
+## Q7
 - Analysis / 分析:
+手写预测总时间31 tick，模拟器实际输出21 tick，预测偏大。`IO_RUN_IMMEDIATE`在I/O完成后立刻抢占CPU运行PID0，PID0可以快速发起下一轮I/O，I/O操作和CPU计算高度重叠，CPU无空闲，达到100%利用率。CPU总忙碌tick21和预期一致；抢占机制消除了PID0就绪队列等待时间，整体耗时比预估更短，相比Q6性能更好。
 ## Q8
 - Prediction / 预测:> `-l 3:50,3:50`；每条指令50%概率CPU / I/O；指令序列由seed=1,2,3确定，无固定时间。
 预期规律：
@@ -97,3 +108,4 @@ seed‑3 IO_RUN_IMMEDIATE: Total Time: 17, CPU Busy: 9 (52.94%), IO Busy: 11 (64
 seed‑3 SWITCH_ON_END: Total Time: 24, CPU Busy: 9 (37.50%), IO Busy: 15 (62.50%)
 
 - Analysis / 分析:
+同一个seed的指令序列固定，仅改变调度参数。`SWITCH_ON_END`性能最差，进程I/O阻塞时不切换CPU，CPU空闲等待I/O结束，总时间明显变长，CPU利用率下降。`IO_RUN_IMMEDIATE`让I/O完成的进程立刻运行，但性能收益取决于系统当时状态：seed‑1、seed‑2开启后与默认结果完全一样；只有seed‑3观察到总时间缩短。说明该策略并不是总能提速，仅当I/O完成时刻有其他进程占用CPU，抢占才会生效。同一seed下CPU Busy数值不变，调度策略不会改变CPU总工作量，只会改变总时间和资源利用率。不同随机种子生成不同CPU/I/O指令序列，调度策略带来的性能提升幅度各不相同。
